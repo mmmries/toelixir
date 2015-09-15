@@ -1,0 +1,2 @@
+%{"websocket_client": {:git, "https://github.com/sanmiguel/websocket_client.git", "16cd139a71d99813ec0c0cd1d8cb92dbde93d9c7", [branch: "master"]},
+  "websocketclient": {:git, "https://github.com/sanmiguel/websocket_client.git", "16cd139a71d99813ec0c0cd1d8cb92dbde93d9c7", [branch: "master"]}}
