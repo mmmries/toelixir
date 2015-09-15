@@ -11,7 +11,10 @@ defmodule Toelixir do
   end
 
   # Callbacks
-  def init([]), do: {:once, %{role: nil, token: "me", name: "me", topic: "tictactoe:1"}}
+  def init([]) do
+    :random.seed(:erlang.timestamp())
+    {:once, %{role: nil, token: "me", name: "me", topic: "tictactoe:1"}}
+  end
 
   def onconnect(_wsreq, state) do
     IO.puts "connected! time to send the first message"
@@ -31,14 +34,13 @@ defmodule Toelixir do
     case msg do
       %{"event" => "phx_reply", "payload" => %{"status" => "ok", "response" => %{"role" => assigned_role}}} ->
         {:ok, %{state | role: assigned_role}}
-      %{"event" => "state", "payload" => %{"whose_turn" => role}} ->
-        case role == state.role do
-          true ->
-            IO.puts "It's my turn!"
-            {:ok, state}
-          false ->
-            {:ok, state}
-        end
+      %{"event" => "state", "payload" => payload} ->
+        make_a_move(state, payload)
+        {:ok, state}
+      %{"event" => "game_over", "payload" => payload} ->
+        IO.puts "the game is over man!"
+        IO.inspect(payload)
+        {:close, "game_over", state}
       _ ->
         {:ok, state}
     end
@@ -57,9 +59,25 @@ defmodule Toelixir do
   end
 
   # Private Methods
+  defp make_a_move(%{token: token, topic: topic}, %{"board" => board}) do
+    square = pick_square_to_play(board)
+    msg = %{topic: topic, event: "move", ref: 2, payload: %{token: token, square: square}}
+    send self, {:send, msg}
+  end
+
   defp send_join_request(%{token: token, name: name, topic: topic}) do
     msg = %{topic: topic, event: "phx_join", ref: 1, payload: %{token: token, name: name}}
     send self, {:send, msg}
   end
 
+  def pick_square_to_play(board) do
+    playable_squares(board) |> Enum.shuffle |> List.first
+  end
+
+  def playable_squares(board) do
+    Enum.with_index(board)
+      |> Enum.filter(fn({nil, _idx}) -> true
+                       (_) -> false end)
+      |> Enum.map fn({nil,idx}) -> idx end
+  end
 end
