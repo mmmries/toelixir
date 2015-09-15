@@ -1,19 +1,25 @@
 defmodule Toelixir do
   @behaviour :websocket_client
 
-  def start_link do
-    start_link('ws://games.riesd.com/socket/websocket?vsn=1.0.0')
-  end
-  def start_link(uri) do
+  def start_link(opts) do
+    url = Dict.get(opts, :url, 'ws://games.riesd.com/socket/websocket?vsn=1.0.0')
+    ai = Dict.get(opts, :ai, :none)
+    token = Dict.fetch!(opts, :token)
+    name = Dict.fetch!(opts, :name)
+    topic = Dict.fetch!(opts, :topic)
     :crypto.start()
     :ssl.start()
-    :websocket_client.start_link(uri, __MODULE__, [])
+    :websocket_client.start_link(url, __MODULE__, [ai: ai, token: token, name: name, topic: topic])
   end
 
   # Callbacks
-  def init([]) do
+  def init(opts) do
+    token = Dict.fetch!(opts, :token)
+    name = Dict.fetch!(opts, :name)
+    topic = Dict.fetch!(opts, :topic)
+    ai = Dict.fetch!(opts, :ai)
     :random.seed(:erlang.timestamp())
-    {:once, %{role: nil, token: "me", name: "me", topic: "tictactoe:1"}}
+    {:once, %{role: nil, token: token, name: name, topic: topic, ai: ai}}
   end
 
   def onconnect(_wsreq, state) do
@@ -65,8 +71,8 @@ defmodule Toelixir do
     send self, {:send, msg}
   end
 
-  defp send_join_request(%{token: token, name: name, topic: topic}) do
-    msg = %{topic: topic, event: "phx_join", ref: 1, payload: %{token: token, name: name}}
+  defp send_join_request(%{token: token, name: name, topic: topic, ai: ai}) do
+    msg = %{topic: topic, event: "phx_join", ref: 1, payload: %{token: token, name: name, ai: ai}}
     send self, {:send, msg}
   end
 
