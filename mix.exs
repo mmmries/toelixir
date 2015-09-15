@@ -28,7 +28,8 @@ defmodule Toelixir.Mixfile do
   # Type `mix help deps` for more examples and options
   defp deps do
     [
-      {:websocket_client, git: "https://github.com/sanmiguel/websocket_client.git", branch: "master"}
+      {:websocket_client, git: "https://github.com/sanmiguel/websocket_client.git", branch: "master"},
+      {:poison, "~> 1.5"},
     ]
   end
 end
